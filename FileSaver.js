@@ -1,8 +1,9 @@
 /* FileSaver.js
- * A saveAs() FileSaver implementation.
+ * A saveAs() & saveTextAs() FileSaver implementation.
  * 2015-03-04
  *
  * By Eli Grey, http://eligrey.com
+ * Modify by Brian Chen
  * License: X11/MIT
  *   See https://github.com/eligrey/FileSaver.js/blob/master/LICENSE.md
  */
@@ -242,7 +243,60 @@ var saveAs = saveAs
 if (typeof module !== "undefined" && module.exports) {
   module.exports.saveAs = saveAs;
 } else if ((typeof define !== "undefined" && define !== null) && (define.amd != null)) {
-  define([], function() {
-    return saveAs;
-  });
+    define([], function () {
+        return saveAs;
+    });
 }
+
+String.prototype.endsWithAny = function () {
+    var strArray = Array.prototype.slice.call(arguments),
+        $this = this.toLowerCase().toString();
+    for (var i = 0; i < strArray.length; i++) {
+        if ($this.indexOf(strArray[i], $this.length - strArray[i].length) !== -1) return true;
+    }
+    return false;
+};
+
+var saveTextAs = saveTextAs
+|| (function (textContent, fileName, charset) {
+    fileName = fileName || 'download.txt';
+    charset = charset || 'utf-8';
+    textContent = (textContent || '').replace(/\r?\n/g, "\r\n");
+    if (saveAs && Blob) {
+        var blob = new Blob([textContent], { type: "text/plain;charset=" + charset });
+        saveAs(blob, fileName);
+        return true;
+    } else {//IE9-
+        var saveTxtWindow = window.frames.saveTxtWindow;
+        if (!saveTxtWindow) {
+            saveTxtWindow = document.createElement('iframe');
+            saveTxtWindow.id = 'saveTxtWindow';
+            saveTxtWindow.style.display = 'none';
+            document.body.insertBefore(saveTxtWindow, null);
+            saveTxtWindow = window.frames.saveTxtWindow;
+            if (!saveTxtWindow) {
+                saveTxtWindow = window.open('', '_temp', 'width=100,height=100');
+                if (!saveTxtWindow) {
+                    window.alert('Sorry, download file could not be created.');
+                    return false;
+                }
+            }
+        }
+
+        var doc = saveTxtWindow.document;
+        doc.open('text/html', 'replace');
+        doc.charset = charset;
+        if (fileName.endsWithAny('.htm', '.html')) {
+            doc.close();
+            doc.body.innerHTML = '\r\n' + textContent + '\r\n';
+        } else {
+            if (!fileName.endsWithAny('.txt')) fileName += '.txt';
+            doc.write(textContent);
+            doc.close();
+        }
+
+        var retValue = doc.execCommand('SaveAs', null, fileName);
+        saveTxtWindow.close();
+        return retValue;
+    }
+})
