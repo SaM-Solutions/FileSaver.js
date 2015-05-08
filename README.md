@@ -1,3 +1,8 @@
+This repo contains sources of original [eligrey/FileSaver.js](https://github.com/eligrey/FileSaver.js) repo with `saveAs()` implementation
+and also sources from [koffsyrup/FileSaver.js](https://github.com/koffsyrup/FileSaver.js) fork which introduces `saveTextAs()` - solution for IE 9- browsers.
+
+---
+
 FileSaver.js
 ============
 
